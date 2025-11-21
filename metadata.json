@@ -1,0 +1,8 @@
+{
+  "name": "Copy of QA Nexus - Team Collaboration",
+  "description": "A collaboration platform for software testing teams featuring real-time chat, file sharing, administrative controls, and AI-powered bug analysis and test case generation using Gemini.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
