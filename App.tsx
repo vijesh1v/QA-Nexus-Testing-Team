@@ -24,6 +24,7 @@ export default function App() {
     const [attachments, setAttachments] = useState<Attachment[]>([]);
     const [showToolModal, setShowToolModal] = useState<'test-case' | null>(null);
     const [testCasePrompt, setTestCasePrompt] = useState('');
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -194,148 +195,165 @@ export default function App() {
     const activeChannelData = channels.find(c => c.id === activeChannel);
 
     return (
-        <div className="flex h-screen bg-white overflow-hidden font-sans text-slate-900">
+        <div className="flex h-screen overflow-hidden bg-slate-50">
             <Sidebar
                 currentUser={currentUser}
                 activeChannelId={activeChannel}
-                onChannelSelect={setActiveChannel}
+                onChannelSelect={(id) => {
+                    setActiveChannel(id);
+                    setSidebarOpen(false); // Close on mobile after selection
+                }}
                 onLogout={handleLogout}
                 onAdminClick={() => setShowAdmin(true)}
                 channels={channels}
                 currentView={currentView}
-                onViewChange={setCurrentView}
+                onViewChange={(view) => {
+                    setCurrentView(view);
+                    setSidebarOpen(false); // Close on mobile after selection
+                }}
+                isOpen={sidebarOpen}
+                onClose={() => setSidebarOpen(false)}
             />
 
-            <main className="flex-1 flex flex-col min-w-0 bg-slate-50">
+            <main className="flex-1 flex flex-col min-w-0 bg-slate-50 overflow-hidden">
                 {/* View Routing */}
 
-                {currentView === 'chat' && (
-                    <>
-                        {/* Header */}
-                        <header className="h-16 border-b border-slate-200 bg-white px-6 flex items-center justify-between shadow-sm z-10">
+                <>
+                    {/* Header */}
+                    <header className="h-16 border-b border-slate-200 bg-white px-4 lg:px-6 flex items-center justify-between shadow-sm z-10">
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setSidebarOpen(true)}
+                                className="lg:hidden p-2 hover:bg-slate-100 rounded-md text-slate-600"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                            </button>
                             <div>
                                 <h2 className="font-bold text-lg flex items-center gap-2 text-slate-800">
                                     <span className="text-slate-400">#</span> {activeChannelData?.name}
                                 </h2>
-                                <p className="text-xs text-slate-500">{activeChannelData?.description}</p>
+                                <p className="text-xs text-slate-500 hidden sm:block">{activeChannelData?.description}</p>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setShowToolModal('test-case')}
-                                    className="flex items-center gap-2 text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-full border border-indigo-100 hover:bg-indigo-100 transition-colors"
-                                >
-                                    <Sparkles size={14} />
-                                    Generate Test Case
-                                </button>
-                            </div>
-                        </header>
-
-                        {/* Chat Area */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth">
-                            {messages.length === 0 && (
-                                <div className="flex flex-col items-center justify-center h-full text-slate-400 opacity-50">
-                                    <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mb-4">
-                                        <Sparkles size={32} />
-                                    </div>
-                                    <p>No messages yet. Start the conversation!</p>
-                                    <p className="text-sm mt-2">Try asking @AI for help</p>
-                                </div>
-                            )}
-
-                            {messages.map((msg) => (
-                                <MessageBubble
-                                    key={msg.id}
-                                    message={msg}
-                                    isOwn={msg.userId === currentUser.id}
-                                    author={storage.getUsers().find(u => u.id === msg.userId)}
-                                    currentUser={currentUser}
-                                    onDelete={handleDeleteMessage}
-                                />
-                            ))}
-
-                            {isAiProcessing && (
-                                <div className="flex gap-2 items-center text-xs text-slate-400 ml-10 animate-pulse">
-                                    <BotIcon /> QA Bot is thinking...
-                                </div>
-                            )}
-                            <div ref={messagesEndRef} />
                         </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setShowToolModal('test-case')}
+                                className="flex items-center gap-2 text-xs font-medium px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-full border border-indigo-100 hover:bg-indigo-100 transition-colors"
+                            >
+                                <Sparkles size={14} />
+                                Generate Test Case
+                            </button>
+                        </div>
+                    </header>
 
-                        {/* Input Area */}
-                        <div className="p-4 bg-white border-t border-slate-200">
-                            {attachments.length > 0 && (
-                                <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
-                                    {attachments.map(att => (
-                                        <div key={att.id} className="relative group">
-                                            {att.type === 'image' ? (
-                                                <img src={att.url} alt="Preview" className="h-20 w-20 object-cover rounded-lg border border-slate-200" />
-                                            ) : (
-                                                <div className="h-20 w-20 bg-slate-100 rounded-lg flex flex-col items-center justify-center text-xs text-slate-500 border border-slate-200">
-                                                    <FileTextIcon />
-                                                    <span className="w-full text-center truncate px-1">{att.name}</span>
-                                                </div>
-                                            )}
-                                            <button
-                                                onClick={() => setAttachments(prev => prev.filter(a => a.id !== att.id))}
-                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
-                                            >
-                                                <XIcon size={12} />
-                                            </button>
-                                        </div>
-                                    ))}
+                    {/* Chat Area */}
+                    <div className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth">
+                        {messages.length === 0 && (
+                            <div className="flex flex-col items-center justify-center h-full text-slate-400 opacity-50">
+                                <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mb-4">
+                                    <Sparkles size={32} />
                                 </div>
-                            )}
+                                <p>No messages yet. Start the conversation!</p>
+                                <p className="text-sm mt-2">Try asking @AI for help</p>
+                            </div>
+                        )}
 
-                            <form onSubmit={handleSendMessage} className="flex items-end gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400 transition-all shadow-sm">
-                                <div className="flex items-center gap-1 pb-2 pl-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => fileInputRef.current?.click()}
-                                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                        title="Upload file"
-                                    >
-                                        <Paperclip size={20} />
-                                    </button>
-                                </div>
-
-                                <textarea
-                                    value={inputText}
-                                    onChange={(e) => setInputText(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' && !e.shiftKey) {
-                                            e.preventDefault();
-                                            handleSendMessage();
-                                        }
-                                    }}
-                                    placeholder="Type a message or @AI for help..."
-                                    className="flex-1 bg-transparent border-none focus:ring-0 text-slate-800 placeholder-slate-400 resize-none max-h-32 py-3"
-                                    rows={1}
-                                />
-
-                                <button
-                                    type="submit"
-                                    disabled={!inputText.trim() && attachments.length === 0}
-                                    className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600 transition-colors shadow-md shadow-blue-200"
-                                >
-                                    <Send size={18} />
-                                </button>
-                            </form>
-                            <input
-                                type="file"
-                                multiple
-                                ref={fileInputRef}
-                                className="hidden"
-                                onChange={handleFileUpload}
+                        {messages.map((msg) => (
+                            <MessageBubble
+                                key={msg.id}
+                                message={msg}
+                                isOwn={msg.userId === currentUser.id}
+                                author={storage.getUsers().find(u => u.id === msg.userId)}
+                                currentUser={currentUser}
+                                onDelete={handleDeleteMessage}
                             />
-                            <p className="text-[10px] text-slate-400 mt-2 text-center">
-                                <strong>Pro Tip:</strong> Upload a screenshot and click "Analyze Bug" on the message to get AI insights.
-                            </p>
-                        </div>
-                    </>
+                        ))}
+
+                        {isAiProcessing && (
+                            <div className="flex gap-2 items-center text-xs text-slate-400 ml-10 animate-pulse">
+                                <BotIcon /> QA Bot is thinking...
+                            </div>
+                        )}
+                        <div ref={messagesEndRef} />
+                    </div>
+
+                    {/* Input Area */}
+                    <div className="p-4 bg-white border-t border-slate-200">
+                        {attachments.length > 0 && (
+                            <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
+                                {attachments.map(att => (
+                                    <div key={att.id} className="relative group">
+                                        {att.type === 'image' ? (
+                                            <img src={att.url} alt="Preview" className="h-20 w-20 object-cover rounded-lg border border-slate-200" />
+                                        ) : (
+                                            <div className="h-20 w-20 bg-slate-100 rounded-lg flex flex-col items-center justify-center text-xs text-slate-500 border border-slate-200">
+                                                <FileTextIcon />
+                                                <span className="w-full text-center truncate px-1">{att.name}</span>
+                                            </div>
+                                        )}
+                                        <button
+                                            onClick={() => setAttachments(prev => prev.filter(a => a.id !== att.id))}
+                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                                        >
+                                            <XIcon size={12} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSendMessage} className="flex items-end gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400 transition-all shadow-sm">
+                            <div className="flex items-center gap-1 pb-2 pl-2">
+                                <button
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                    title="Upload file"
+                                >
+                                    <Paperclip size={20} />
+                                </button>
+                            </div>
+
+                            <textarea
+                                value={inputText}
+                                onChange={(e) => setInputText(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleSendMessage();
+                                    }
+                                }}
+                                placeholder="Type a message or @AI for help..."
+                                className="flex-1 bg-transparent border-none focus:ring-0 text-slate-800 placeholder-slate-400 resize-none max-h-32 py-3"
+                                rows={1}
+                            />
+
+                            <button
+                                type="submit"
+                                disabled={!inputText.trim() && attachments.length === 0}
+                                className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600 transition-colors shadow-md shadow-blue-200"
+                            >
+                                <Send size={18} />
+                            </button>
+                        </form>
+                        <input
+                            type="file"
+                            multiple
+                            ref={fileInputRef}
+                            className="hidden"
+                            onChange={handleFileUpload}
+                        />
+                        <p className="text-[10px] text-slate-400 mt-2 text-center">
+                            <strong>Pro Tip:</strong> Upload a screenshot and click "Analyze Bug" on the message to get AI insights.
+                        </p>
+                    </div>
+                </>
                 )}
 
-                {currentView === 'time' && <div className="flex-1 overflow-y-auto"><TimeTracker currentUser={currentUser} /></div>}
-                {currentView === 'leave' && <div className="flex-1 overflow-y-auto"><LeavePortal currentUser={currentUser} /></div>}
+                {currentView === 'time' && <div className="flex-1 overflow-y-auto"><TimeTracker currentUser={currentUser} onMenuClick={() => setSidebarOpen(true)} /></div>}
+                {currentView === 'leave' && <div className="flex-1 overflow-y-auto"><LeavePortal currentUser={currentUser} onMenuClick={() => setSidebarOpen(true)} /></div>}
                 {currentView === 'analytics' && currentUser.role === UserRole.ADMIN && <div className="flex-1 overflow-y-auto"><AdminAnalytics /></div>}
                 {currentView === 'analytics' && currentUser.role !== UserRole.ADMIN && (
                     <div className="flex-1 flex items-center justify-center text-slate-400">Access Restricted</div>

@@ -98,7 +98,33 @@ router.put('/:id', authenticateToken, (req, res) => {
     return res.status(403).json({ error: 'Not authorized' });
   }
 
-  const { username, role, avatar } = req.body;
+  const { username, role, avatar, password } = req.body;
+
+  // If only updating password
+  if (password && !username && !role) {
+    bcrypt.hash(password, 10, (err, hash) => {
+      if (err) {
+        return res.status(500).json({ error: 'Password hashing error' });
+      }
+
+      db.run(
+        'UPDATE users SET password = ? WHERE id = ?',
+        [hash, id],
+        function (err) {
+          if (err) {
+            return res.status(500).json({ error: 'Database error' });
+          }
+
+          if (this.changes === 0) {
+            return res.status(404).json({ error: 'User not found' });
+          }
+
+          res.json({ message: 'Password updated successfully' });
+        }
+      );
+    });
+    return;
+  }
 
   if (!username || !role) {
     return res.status(400).json({ error: 'Username and role are required' });

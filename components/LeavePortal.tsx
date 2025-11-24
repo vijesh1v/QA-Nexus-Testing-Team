@@ -5,9 +5,10 @@ import { CalendarDays, Send, Clock } from 'lucide-react';
 
 interface LeavePortalProps {
   currentUser: User;
+  onMenuClick?: () => void;
 }
 
-export const LeavePortal: React.FC<LeavePortalProps> = ({ currentUser }) => {
+export const LeavePortal: React.FC<LeavePortalProps> = ({ currentUser, onMenuClick }) => {
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -49,12 +50,24 @@ export const LeavePortal: React.FC<LeavePortalProps> = ({ currentUser }) => {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-          <CalendarDays className="text-teal-600" /> Leave Management
-        </h1>
-        <p className="text-slate-500">Submit leave requests and track approval status.</p>
+    <div className="p-4 lg:p-6 max-w-5xl mx-auto">
+      <div className="mb-6 lg:mb-8 flex items-center gap-3">
+        {onMenuClick && (
+          <button
+            onClick={onMenuClick}
+            className="lg:hidden p-2 hover:bg-slate-100 rounded-md text-slate-600"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        )}
+        <div className="flex-1">
+          <h1 className="text-xl lg:text-2xl font-bold text-slate-800 flex items-center gap-2">
+            <CalendarDays className="text-teal-600" /> Leave Management
+          </h1>
+          <p className="text-sm lg:text-base text-slate-500">Submit leave requests and track approval status.</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -109,8 +122,8 @@ export const LeavePortal: React.FC<LeavePortalProps> = ({ currentUser }) => {
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <span className={`text-sm font-medium px-3 py-1 rounded-full ${req.status === 'Approved' ? 'bg-green-100 text-green-700' :
-                      req.status === 'Rejected' ? 'bg-red-100 text-red-700' :
-                        'bg-amber-100 text-amber-700'
+                    req.status === 'Rejected' ? 'bg-red-100 text-red-700' :
+                      'bg-amber-100 text-amber-700'
                     }`}>
                     {req.status}
                   </span>
