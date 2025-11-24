@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User } from '../types';
-import { storage } from '../services/storage';
+import { api } from '../services/api';
 import { Lock, User as UserIcon, ArrowRight, ShieldCheck } from 'lucide-react';
 
 interface LoginProps {
@@ -17,11 +17,15 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setError('');
 
     try {
-      const { token, user } = await import('../services/api').then(m => m.api.login(username, password));
+      const { token, user } = await api.login(username, password);
+
+      // Store token and user
       localStorage.setItem('qa_nexus_token', token);
+      localStorage.setItem('qa_nexus_current_user', JSON.stringify(user));
+
       onLogin(user);
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      setError(err.message || 'Invalid credentials');
     }
   };
 
