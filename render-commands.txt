@@ -1,0 +1,5 @@
+# Build command (run during deployment)
+npm install && npm run build && cd backend && npm install
+
+# Start command (run to start the service)
+npm start
