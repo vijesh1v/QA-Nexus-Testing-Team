@@ -44,6 +44,32 @@ export const api = {
         return handleResponse(response);
     },
 
+    addUser: async (user: { username: string; password: string; role: string; avatar?: string }): Promise<User> => {
+        const response = await fetch(`${BASE_URL}/users`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(user),
+        });
+        return handleResponse(response);
+    },
+
+    updateUser: async (id: string, updates: Partial<User>): Promise<User> => {
+        const response = await fetch(`${BASE_URL}/users/${id}`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify(updates),
+        });
+        return handleResponse(response);
+    },
+
+    deleteUser: async (id: string): Promise<void> => {
+        const response = await fetch(`${BASE_URL}/users/${id}`, {
+            method: 'DELETE',
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
     // Channels
     getChannels: async (): Promise<Channel[]> => {
         const response = await fetch(`${BASE_URL}/channels`, {
