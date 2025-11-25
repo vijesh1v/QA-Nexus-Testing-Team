@@ -57,7 +57,11 @@ function initializeDatabase() {
           duration REAL NOT NULL,
           description TEXT,
           timestamp INTEGER NOT NULL,
-          FOREIGN KEY (userId) REFERENCES users (id)
+          approvalStatus TEXT DEFAULT 'Pending',
+          approvedBy TEXT,
+          approvedAt INTEGER,
+          FOREIGN KEY (userId) REFERENCES users (id),
+          FOREIGN KEY (approvedBy) REFERENCES users (id)
         )
       `);
 

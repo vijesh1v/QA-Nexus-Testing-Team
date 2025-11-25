@@ -45,6 +45,10 @@ export interface TimeLog {
   duration: number; // in hours
   description: string;
   timestamp: number;
+  approvalStatus?: 'Pending' | 'Approved' | 'Rejected';
+  approvedBy?: string;
+  approvedAt?: number;
+  username?: string; // For admin views
 }
 
 export interface LeaveRequest {

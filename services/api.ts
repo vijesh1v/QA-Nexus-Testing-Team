@@ -128,9 +128,43 @@ export const api = {
         return handleResponse(response);
     },
 
+    // Admin: Get all time logs
+    getAllTimeLogs: async (): Promise<TimeLog[]> => {
+        const response = await fetch(`${BASE_URL}/time-logs/all`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    // Admin: Approve time log
+    approveTimeLog: async (id: string): Promise<TimeLog> => {
+        const response = await fetch(`${BASE_URL}/time-logs/${id}/approve`, {
+            method: 'PUT',
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    // Admin: Reject time log
+    rejectTimeLog: async (id: string): Promise<TimeLog> => {
+        const response = await fetch(`${BASE_URL}/time-logs/${id}/reject`, {
+            method: 'PUT',
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
     // Leave Requests
     getLeaveRequests: async (): Promise<LeaveRequest[]> => {
         const response = await fetch(`${BASE_URL}/leave-requests`, {
+            headers: getHeaders(),
+        });
+        return handleResponse(response);
+    },
+
+    // Admin: Get all leave requests
+    getAllLeaveRequests: async (): Promise<LeaveRequest[]> => {
+        const response = await fetch(`${BASE_URL}/leave-requests/all`, {
             headers: getHeaders(),
         });
         return handleResponse(response);
@@ -150,6 +184,16 @@ export const api = {
             method: 'PUT',
             headers: getHeaders(),
             body: JSON.stringify(updates),
+        });
+        return handleResponse(response);
+    },
+
+    // Admin: Update leave request status
+    updateLeaveStatus: async (id: string, status: 'Pending' | 'Approved' | 'Rejected'): Promise<LeaveRequest> => {
+        const response = await fetch(`${BASE_URL}/leave-requests/${id}/status`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify({ status }),
         });
         return handleResponse(response);
     }

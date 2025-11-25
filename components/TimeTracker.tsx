@@ -165,6 +165,7 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({ currentUser, onMenuCli
                     <th className="px-4 py-3">Time</th>
                     <th className="px-4 py-3">Hours</th>
                     <th className="px-4 py-3">Description</th>
+                    <th className="px-4 py-3">Status</th>
                     <th className="px-4 py-3 text-right">Action</th>
                   </tr>
                 </thead>
@@ -181,6 +182,14 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({ currentUser, onMenuCli
                         </span>
                       </td>
                       <td className="px-4 py-3 text-slate-600 max-w-xs truncate" title={log.description}>{log.description}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${log.approvalStatus === 'Approved' ? 'bg-green-100 text-green-700' :
+                            log.approvalStatus === 'Rejected' ? 'bg-red-100 text-red-700' :
+                              'bg-amber-100 text-amber-700'
+                          }`}>
+                          {log.approvalStatus || 'Pending'}
+                        </span>
+                      </td>
                       <td className="px-4 py-3 text-right">
                         <button
                           onClick={() => handleDelete(log.id)}

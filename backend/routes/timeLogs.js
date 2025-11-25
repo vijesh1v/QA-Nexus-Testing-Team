@@ -4,6 +4,27 @@ const { authenticateToken } = require('./auth');
 
 const router = express.Router();
 
+// Get all time logs (admin only)
+router.get('/all', authenticateToken, (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+
+  db.all(
+    `SELECT tl.*, u.username 
+     FROM time_logs tl
+     JOIN users u ON tl.userId = u.id
+     ORDER BY tl.timestamp DESC`,
+    [],
+    (err, rows) => {
+      if (err) {
+        return res.status(500).json({ error: 'Database error' });
+      }
+      res.json(rows);
+    }
+  );
+});
+
 // Get time logs for current user
 router.get('/', authenticateToken, (req, res) => {
   db.all(
@@ -115,6 +136,80 @@ router.put('/:id', authenticateToken, (req, res) => {
           duration,
           description: description || null,
           timestamp: log.timestamp
+        });
+      }
+    );
+  });
+});
+
+// Approve time log (admin only)
+router.put('/:id/approve', authenticateToken, (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+
+  const { id } = req.params;
+  const approvedAt = Date.now();
+
+  db.get('SELECT * FROM time_logs WHERE id = ?', [id], (err, log) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    if (!log) {
+      return res.status(404).json({ error: 'Time log not found' });
+    }
+
+    db.run(
+      'UPDATE time_logs SET approvalStatus = ?, approvedBy = ?, approvedAt = ? WHERE id = ?',
+      ['Approved', req.user.id, approvedAt, id],
+      function (err) {
+        if (err) {
+          return res.status(500).json({ error: 'Database error' });
+        }
+
+        res.json({
+          ...log,
+          approvalStatus: 'Approved',
+          approvedBy: req.user.id,
+          approvedAt
+        });
+      }
+    );
+  });
+});
+
+// Reject time log (admin only)
+router.put('/:id/reject', authenticateToken, (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+
+  const { id } = req.params;
+  const approvedAt = Date.now();
+
+  db.get('SELECT * FROM time_logs WHERE id = ?', [id], (err, log) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    if (!log) {
+      return res.status(404).json({ error: 'Time log not found' });
+    }
+
+    db.run(
+      'UPDATE time_logs SET approvalStatus = ?, approvedBy = ?, approvedAt = ? WHERE id = ?',
+      ['Rejected', req.user.id, approvedAt, id],
+      function (err) {
+        if (err) {
+          return res.status(500).json({ error: 'Database error' });
+        }
+
+        res.json({
+          ...log,
+          approvalStatus: 'Rejected',
+          approvedBy: req.user.id,
+          approvedAt
         });
       }
     );
